@@ -143,11 +143,11 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-func cmdSkill(c string, c2 *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+func cmdSkill(champ string, channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
 	//TODO: Finish this command
 	// Check if it's a command we recognize
-	if strings.HasPrefix(c, "!skill") {
-		tokens := strings.Split(c, " ")
+
+		tokens := strings.Split(champ, " ")
 		if len(tokens) != 3 {
 			// Unrecognized, must be in the form: "!skill champ q
 			log.Debug("Ignoring a unrecognized command: %s", m.Content)
@@ -171,17 +171,14 @@ func cmdSkill(c string, c2 *discordgo.Channel, s *discordgo.Session, m *discordg
 		//	s.ChannelMessageSend(m.ChannelID, "Could not find that champion: "+err.Error())
 		//	return
 		//}
-
-	}
-
 }
 
 
-func cmdLeagueWatch(c string, c2 *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+func cmdLeagueWatch(content string, channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Check if it's a command we recognize
-	if strings.HasPrefix(c, "!leaguewatch") {
-		tokens := strings.Split(c, " ")
+
+		tokens := strings.Split(content, " ")
 		if len(tokens) != 2 {
 			// Unrecognized, must be in the form: "!leaguewatch SomeGuy
 			log.Debug("Ignoring a unrecognized command: %s", m.Content)
@@ -203,16 +200,20 @@ func cmdLeagueWatch(c string, c2 *discordgo.Channel, s *discordgo.Session, m *di
 			return
 		}
 
-		go startMonitoring(summoner, c2)
-	}
+		go startMonitoring(summoner, channel)
+
 
 }
 
 func cmdHelp(channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
-	s.ChannelMessageSend(m.ChannelID, "discord-lolstatus by Grevian, bastardized by foghsho")
-	s.ChannelMessageSend(m.ChannelID, "Commands:")
-	s.ChannelMessageSend(m.ChannelID, "!leaguewatch <summonername> - This will monitor an account to show how bad they are after each game")
-	s.ChannelMessageSend(m.ChannelID, "!help - That's this! idiot.")
+
+	helpMessage := `discord-lolstatus by Grevian, bastardized by foghsho
+Commands:
+!leaguewatch <summonername> - This will monitor an account to show how bad they are after each game
+!help - That's this! idiot.`
+
+	s.ChannelMessageSend(m.ChannelID, helpMessage)
+
 }
 
 func startMonitoring(summoner *riotapi.Summoner, reportingChannel *discordgo.Channel) {
