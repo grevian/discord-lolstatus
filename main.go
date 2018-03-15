@@ -105,7 +105,7 @@ func setupDiscord() (*discordgo.Session, error) {
 		return nil, err
 	}
 
-	discord.AddHandler(messageCreate)
+	discord.AddHandler(messageHandler)
 
 	err = discord.Open()
 	if err != nil {
@@ -115,7 +115,7 @@ func setupDiscord() (*discordgo.Session, error) {
 	return discord, nil
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore our own messages
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -127,9 +127,61 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// Check if it's a command we recognize
+	if strings.HasPrefix(m.Content, "!skill") {
+		//TODO: Finish this command
+		//cmdSkill(m.Content, channel, s, m)
+	}
+
 	if strings.HasPrefix(m.Content, "!leaguewatch") {
-		tokens := strings.Split(m.Content, " ")
+		cmdLeagueWatch(m.Content, channel, s, m)
+	}
+
+	if strings.HasPrefix(m.Content, "!help") {
+		cmdHelp(channel, s, m)
+	}
+
+
+}
+
+func cmdSkill(c string, c2 *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+	//TODO: Finish this command
+	// Check if it's a command we recognize
+	if strings.HasPrefix(c, "!skill") {
+		tokens := strings.Split(c, " ")
+		if len(tokens) != 3 {
+			// Unrecognized, must be in the form: "!skill champ q
+			log.Debug("Ignoring a unrecognized command: %s", m.Content)
+			s.ChannelMessageSend(m.ChannelID, "Unrecognized command, try '!skill Karma q'")
+			return
+		}
+		//championName := tokens[1]
+		//championSkill := tokens[2]
+		//ctx := context.Background()
+		//champList, err := botMain.riot.GetChampions(ctx, region.NA1)
+
+		//for _, v := range champList.Champions {
+		//	if v.Name == championName {
+		//		//championID := something
+		//	}
+		//}
+
+		//if err != nil {
+		//	// Handle this error, print to the users
+		//	log.WithError(err).Error("Failed to get find details")
+		//	s.ChannelMessageSend(m.ChannelID, "Could not find that champion: "+err.Error())
+		//	return
+		//}
+
+	}
+
+}
+
+
+func cmdLeagueWatch(c string, c2 *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Check if it's a command we recognize
+	if strings.HasPrefix(c, "!leaguewatch") {
+		tokens := strings.Split(c, " ")
 		if len(tokens) != 2 {
 			// Unrecognized, must be in the form: "!leaguewatch SomeGuy
 			log.Debug("Ignoring a unrecognized command: %s", m.Content)
@@ -146,9 +198,21 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		go startMonitoring(summoner, channel)
+		if watchTarget == "yamrel" {
+			s.ChannelMessageSend(m.ChannelID, "I don't watch cucks. Sorry.")
+			return
+		}
+
+		go startMonitoring(summoner, c2)
 	}
 
+}
+
+func cmdHelp(channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+	s.ChannelMessageSend(m.ChannelID, "discord-lolstatus by Grevian, bastardized by foghsho")
+	s.ChannelMessageSend(m.ChannelID, "Commands:")
+	s.ChannelMessageSend(m.ChannelID, "!leaguewatch <summonername> - This will monitor an account to show how bad they are after each game")
+	s.ChannelMessageSend(m.ChannelID, "!help - That's this! idiot.")
 }
 
 func startMonitoring(summoner *riotapi.Summoner, reportingChannel *discordgo.Channel) {
