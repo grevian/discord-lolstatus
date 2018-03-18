@@ -137,7 +137,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, "!help") {
-		cmdHelp(channel, s, m)
+		cmdHelp(s, m)
 	}
 
 
@@ -164,6 +164,18 @@ func cmdSkill(champ string, channel *discordgo.Channel, s *discordgo.Session, m 
 		//		//championID := something
 		//	}
 		//}
+
+		//ctx,_  := context.WithTimeout(context.Background(), 5*time.Second)
+		//c := riotapi.staticdata.New(http.DefaultClient)
+		//versions,_ err := c.Versions(ctx)
+		//champs,_  := c.Champions(ctx, versions[0], language.EnglishUnitedStates)
+
+		//for WhatIsThis, champ := range champs.Data {
+		//	for _, ability := range champ.Spells {
+		//		fmt.Print(ability.Description)
+		//	}
+		//}
+
 
 		//if err != nil {
 		//	// Handle this error, print to the users
@@ -195,17 +207,12 @@ func cmdLeagueWatch(content string, channel *discordgo.Channel, s *discordgo.Ses
 			return
 		}
 
-		if watchTarget == "yamrel" {
-			s.ChannelMessageSend(m.ChannelID, "I don't watch cucks. Sorry.")
-			return
-		}
-
 		go startMonitoring(summoner, channel)
 
 
 }
 
-func cmdHelp(channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
+func cmdHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	helpMessage := `discord-lolstatus by Grevian, bastardized by foghsho
 Commands:
@@ -283,9 +290,17 @@ func monitorLoop(sd *SummonerDetails) {
 				gameParticipant.Stats.Deaths,
 				gameParticipant.Stats.Assists)
 
-			message := fmt.Sprintf("%s just went %s, looks like %s",
+			// Build the champion message and send to channel
+			var champid = gameParticipant.ChampionID
+			var role = gameParticipant.Timeline.Role
+
+
+
+			message := fmt.Sprintf("[%s] **%s** just went %s as __%s__, looks like %s",
+				role,
 				sd.summoner.Name,
 				statline,
+				champid,
 				getGameStatus(gameParticipant.Stats.Kills, gameParticipant.Stats.Deaths, gameParticipant.Stats.Win))
 
 			_, err = botMain.discord.ChannelMessageSend(sd.reportingChannel.ID, message)
