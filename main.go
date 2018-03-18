@@ -292,7 +292,7 @@ func monitorLoop(sd *SummonerDetails) {
 
 			// Build the champion message and send to channel
 			var champid = gameParticipant.ChampionID
-			var role = gameParticipant.Timeline.Role
+			var role = gameParticipant.Timeline.Lane
 
 
 
