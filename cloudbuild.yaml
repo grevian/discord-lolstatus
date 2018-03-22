@@ -1,0 +1,9 @@
+steps:
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', 'github.com/grevian/discord-lolstatus']
+  env: ['PROJECT_ROOT=github.com/grevian/discord-lolstatus']
+  id: 'build_bot'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/discord-lolstatus', '.']
+  waitFor: ['build_bot']
+images: ['gcr.io/$PROJECT_ID/discord-lolstatus']
