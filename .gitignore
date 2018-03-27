@@ -15,5 +15,5 @@
 
 # Custom excludes for this project
 .idea
-botdata.json
-lolcoach-monitor.iml
+data/botdata.json
+discord-lolstatus.iml

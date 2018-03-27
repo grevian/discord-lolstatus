@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const BOT_STATE = "./botdata.json"
+const BOT_STATE = "./data/botdata.json"
 
 // A simplified struct with public fields, used to write the summoner details to disk
 type SerializedSummonerDetails struct {
