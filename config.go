@@ -11,7 +11,7 @@ import (
 	riotapi "github.com/yuhanfang/riot/apiclient"
 	"github.com/yuhanfang/riot/ratelimit"
 
-	"./secrets"
+	"github.com/grevian/discord-lolstatus/secrets"
 )
 
 const (
