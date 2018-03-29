@@ -1,0 +1,5 @@
+{
+  "ProviderType": "KMSFile",
+  "ProviderLocation": "secrets.json.enc",
+  "ProviderAdditional": "projects/[YOUR-PROJECT-ID]/locations/[YOUR-KEYRING-LOCATION]/keyRings/[YOUR-KEY-RING]/cryptoKeys/[YOUR-KEY]"
+}

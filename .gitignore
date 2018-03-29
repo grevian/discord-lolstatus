@@ -17,3 +17,5 @@
 .idea
 data/botdata.json
 discord-lolstatus.iml
+secrets.json
+config.json
