@@ -37,4 +37,3 @@ func getGameStatus(kills int, deaths int, win bool) string {
 
 	return "here be dragons"
 }
-

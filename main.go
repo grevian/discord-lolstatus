@@ -4,12 +4,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/bwmarrin/discordgo"
 	riotapi "github.com/yuhanfang/riot/apiclient"
-	"github.com/yuhanfang/riot/ratelimit"
 	"github.com/yuhanfang/riot/constants/region"
 
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -34,14 +32,20 @@ type LeagueAnnouncerBot struct {
 }
 
 func main() {
-	discord, err := setupDiscord()
+	log.SetLevel(log.DebugLevel)
+	configuration, err := NewBotConfiguration("./config.json")
 	if err != nil {
-		log.WithError(err).Panic("Failed to connect discord client")
+		log.WithError(err).Fatal("Could not load configuration")
 	}
 
-	riot, err := setupRiot()
+	discord, err := configuration.GetDiscordClient()
 	if err != nil {
-		log.WithError(err).Panic("Failed to connect riot API client")
+		log.WithError(err).Fatal("Could not open Discord client")
+	}
+
+	riot, err := configuration.GetRiotClient()
+	if err != nil {
+		log.WithError(err).Fatal("Could not open Riot client")
 	}
 
 	bot := &LeagueAnnouncerBot{
@@ -66,6 +70,8 @@ func main() {
 		go monitorLoop(s)
 	}
 
+	discord.AddHandler(messageHandler)
+
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -80,39 +86,6 @@ func main() {
 
 	// Cleanly close down the Discord session.
 	botMain.discord.Close()
-}
-
-func setupRiot() (riotapi.Client, error) {
-	key := os.Getenv("RIOT_APIKEY")
-	if key == "" {
-		return nil, fmt.Errorf("no RIOT API Key")
-	}
-
-	httpClient := http.DefaultClient
-	limiter := ratelimit.NewLimiter()
-	client := riotapi.New(key, httpClient, limiter)
-	return client, nil
-}
-
-func setupDiscord() (*discordgo.Session, error) {
-	discordAuthToken := os.Getenv("DISCORD_AUTH")
-	if discordAuthToken == "" {
-		return nil, fmt.Errorf("no Discord Auth Token Provided")
-	}
-
-	discord, err := discordgo.New("Bot " + discordAuthToken)
-	if err != nil {
-		return nil, err
-	}
-
-	discord.AddHandler(messageHandler)
-
-	err = discord.Open()
-	if err != nil {
-		return nil, err
-	}
-
-	return discord, nil
 }
 
 func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -140,75 +113,71 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		cmdHelp(s, m)
 	}
 
-
 }
 
 func cmdSkill(champ string, channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
 	//TODO: Finish this command
 	// Check if it's a command we recognize
 
-		tokens := strings.Split(champ, " ")
-		if len(tokens) != 3 {
-			// Unrecognized, must be in the form: "!skill champ q
-			log.Debug("Ignoring a unrecognized command: %s", m.Content)
-			s.ChannelMessageSend(m.ChannelID, "Unrecognized command, try '!skill Karma q'")
-			return
-		}
-		//championName := tokens[1]
-		//championSkill := tokens[2]
-		//ctx := context.Background()
-		//champList, err := botMain.riot.GetChampions(ctx, region.NA1)
+	tokens := strings.Split(champ, " ")
+	if len(tokens) != 3 {
+		// Unrecognized, must be in the form: "!skill champ q
+		log.Debug("Ignoring a unrecognized command: %s", m.Content)
+		s.ChannelMessageSend(m.ChannelID, "Unrecognized command, try '!skill Karma q'")
+		return
+	}
+	//championName := tokens[1]
+	//championSkill := tokens[2]
+	//ctx := context.Background()
+	//champList, err := botMain.riot.GetChampions(ctx, region.NA1)
 
-		//for _, v := range champList.Champions {
-		//	if v.Name == championName {
-		//		//championID := something
-		//	}
-		//}
+	//for _, v := range champList.Champions {
+	//	if v.Name == championName {
+	//		//championID := something
+	//	}
+	//}
 
-		//ctx,_  := context.WithTimeout(context.Background(), 5*time.Second)
-		//c := riotapi.staticdata.New(http.DefaultClient)
-		//versions,_ err := c.Versions(ctx)
-		//champs,_  := c.Champions(ctx, versions[0], language.EnglishUnitedStates)
+	//ctx,_  := context.WithTimeout(context.Background(), 5*time.Second)
+	//c := riotapi.staticdata.New(http.DefaultClient)
+	//versions,_ err := c.Versions(ctx)
+	//champs,_  := c.Champions(ctx, versions[0], language.EnglishUnitedStates)
 
-		//for WhatIsThis, champ := range champs.Data {
-		//	for _, ability := range champ.Spells {
-		//		fmt.Print(ability.Description)
-		//	}
-		//}
+	//for WhatIsThis, champ := range champs.Data {
+	//	for _, ability := range champ.Spells {
+	//		fmt.Print(ability.Description)
+	//	}
+	//}
 
-
-		//if err != nil {
-		//	// Handle this error, print to the users
-		//	log.WithError(err).Error("Failed to get find details")
-		//	s.ChannelMessageSend(m.ChannelID, "Could not find that champion: "+err.Error())
-		//	return
-		//}
+	//if err != nil {
+	//	// Handle this error, print to the users
+	//	log.WithError(err).Error("Failed to get find details")
+	//	s.ChannelMessageSend(m.ChannelID, "Could not find that champion: "+err.Error())
+	//	return
+	//}
 }
-
 
 func cmdLeagueWatch(content string, channel *discordgo.Channel, s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Check if it's a command we recognize
 
-		tokens := strings.Split(content, " ")
-		if len(tokens) != 2 {
-			// Unrecognized, must be in the form: "!leaguewatch SomeGuy
-			log.Debug("Ignoring a unrecognized command: %s", m.Content)
-			s.ChannelMessageSend(m.ChannelID, "Unrecognized command, try '!leaguewatch <summonername>'")
-			return
-		}
-		watchTarget := tokens[1]
-		ctx := context.Background()
-		summoner, err := botMain.riot.GetBySummonerName(ctx, region.NA1, watchTarget)
-		if err != nil {
-			// Handle this error, print to the users
-			log.WithError(err).Error("Failed to get find details")
-			s.ChannelMessageSend(m.ChannelID, "Could not find that summoner: "+err.Error())
-			return
-		}
+	tokens := strings.Split(content, " ")
+	if len(tokens) != 2 {
+		// Unrecognized, must be in the form: "!leaguewatch SomeGuy
+		log.Debug("Ignoring a unrecognized command: %s", m.Content)
+		s.ChannelMessageSend(m.ChannelID, "Unrecognized command, try '!leaguewatch <summonername>'")
+		return
+	}
+	watchTarget := tokens[1]
+	ctx := context.Background()
+	summoner, err := botMain.riot.GetBySummonerName(ctx, region.NA1, watchTarget)
+	if err != nil {
+		// Handle this error, print to the users
+		log.WithError(err).Error("Failed to get find details")
+		s.ChannelMessageSend(m.ChannelID, "Could not find that summoner: "+err.Error())
+		return
+	}
 
-		go startMonitoring(summoner, channel)
-
+	go startMonitoring(summoner, channel)
 
 }
 
@@ -293,8 +262,6 @@ func monitorLoop(sd *SummonerDetails) {
 			// Build the champion message and send to channel
 			var champid = gameParticipant.ChampionID
 			var role = gameParticipant.Timeline.Lane
-
-
 
 			message := fmt.Sprintf("[%s] **%s** just went %s as __%s__, looks like %s",
 				role,
